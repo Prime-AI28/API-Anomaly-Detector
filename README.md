@@ -21,7 +21,7 @@ The repository is organized as follows:
 
 `requirements.txt`: A list of Python dependencies required to run the project. You can use this file to set up a virtual environment.
 
-Installation
+## Installation
 1. Clone this repository to your local machine:
     ```git clone https://github.com/your-username/API-Anomaly-Detection.git```
 
