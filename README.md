@@ -4,6 +4,10 @@
 
 This GitHub repository contains the source code and resources for an API anomaly detection project. The project focuses on analyzing API call data using various Python data science and machine learning algorithms, including Isolation Forest, One-Class SVM, and Random Forest. Additionally, a Streamlit dashboard has been developed to visualize and interact with the results, specifically showing data from the previous day (D-1).
 
+# This is Preview of The Dashboard
+![image](https://github.com/Prime-AI28/API-Anomaly-Detector/assets/67257584/7dbf48a0-1eb5-4667-a781-44c177facf9c)
+
+
 Project Structure
 The repository is organized as follows:
 
