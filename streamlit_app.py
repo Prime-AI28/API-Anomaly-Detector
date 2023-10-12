@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import data_processing as dp
+import src.Anomly_detection as ad
+import src.data_preprocessing as dp
 
 st.set_page_config(
      page_title="API MONITORING",
@@ -11,9 +12,6 @@ st.set_page_config(
      layout="wide",
      initial_sidebar_state="expanded",
      )
-
-st.title("API MONITORING")
-st.markdown("_Prototype v0.1.1_")
 
 @st.cache_data
 def load_data(path: str):
@@ -195,6 +193,10 @@ def print_list():
      st.write("Anomaly Detected")
      st.dataframe(train(df))
 
+st.title("API MONITORING")
+st.markdown("_Prototype v0.1.1_")
+
+
 with st.sidebar:
      st.header("Configuration")
      upload_file = st.sidebar.file_uploader("Choose a file", type=["csv"])
@@ -202,11 +204,22 @@ with st.sidebar:
 if upload_file is None:
      st.info("Please upload a file of type: " + ", ".join(["csv"]), icon="ℹ️")
      st.stop()
-df = load_data(upload_file)
-df['DATE'] = pd.to_datetime(df['DATE'], format='%d-%m-%y')
-dates = sorted(df['DATE'].unique())
 
-flag = 0
+df = load_data(upload_file)
+file = df.copy()
+with st.expander("Data preview"):
+     st.info("Showing data preview")
+     st.markdown("### Raw data")
+     st.dataframe(df)
+
+col_1, col_2, col_3, col_4 = st.columns([1,1,1,1])
+col1, col2 = st.columns([4,1])
+b_l_c, b_r_c = st.columns(2)
+
+pro_df, dates = dp.preprocessing(file)
+
+dates.reverse()
+
 
 #total data
 t_data = df.copy()
@@ -214,7 +227,7 @@ t_data['SUM_COUNT_DATE'] = t_data.groupby(['DATE'])['COUNT'].transform('sum')
 t_data = t_data.drop_duplicates(subset=['DATE'])
 t_data = t_data.drop(['APPNAME', 'API', 'COUNT', 'STATUS'], axis=1)
 counts = sorted(t_data['SUM_COUNT_DATE'].tolist())
-current_sumcount = t_data[t_data["DATE"] == dates[-1]]['SUM_COUNT_DATE'].tolist()[0]
+current_sumcount = t_data[t_data["DATE"] == dates[-1].strftime('%Y-%m-%d')]['SUM_COUNT_DATE'].tolist()[0]
 max_count = counts[-1]
 
 per_total = (current_sumcount/max_count)*100
@@ -230,7 +243,7 @@ suc_nd = np.percentile(suc_data['SUM_COUNT_DATE'], 95)
 suc_data['col'] = 'blue'
 suc_data.loc[suc_data['SUM_COUNT_DATE'] < suc_qr, 'col'] = 'red'
 
-current_suc = suc_data[suc_data["DATE"] == dates[-1]]['SUM_COUNT_DATE'].tolist()[0]
+current_suc = suc_data[suc_data["DATE"] == dates[-1].strftime('%Y-%m-%d')]['SUM_COUNT_DATE'].tolist()[0]
 per_suc = (current_suc/suc_nd)*100
 
 #failiure plots
@@ -242,13 +255,9 @@ fail_data['col'] = 'blue'
 fail_qr = np.percentile(fail_data['SUM_COUNT_DATE'], 90)
 fail_data.loc[fail_data['SUM_COUNT_DATE'] > fail_qr, 'col'] = 'red'
 
-current_fail = fail_data[fail_data["DATE"] == dates[-1]]['SUM_COUNT_DATE'].tolist()[0]
+current_fail = fail_data[fail_data["DATE"] == dates[-1].strftime('%Y-%m-%d')]['SUM_COUNT_DATE'].tolist()[0]
 per_fail = (current_fail/fail_qr)*100
 
-with st.expander("Data preview"):
-     st.info("Showing data preview")
-     st.markdown("### Raw data")
-     st.dataframe(df)
 
 df_gp = df.copy()
 df_gp['SUM_COUNT'] = df_gp.groupby(['DATE','APPNAME', 'API'])['COUNT'].transform('sum')
@@ -256,25 +265,8 @@ df_gp = df_gp.drop_duplicates(subset=['DATE','APPNAME', 'API'])
 df_gp.drop(['COUNT', 'STATUS'], axis=1, inplace=True)
 df_gp = df_gp.reset_index(drop=True) 
 
-col1, col2 = st.columns([4,1])
-col_1, col_2, col_3, col_4 = st.columns([1,1,1,1])
-b_l_c, b_r_c = st.columns(2)
 
 
-with col2:
-     filter_data = slicer()
-
-     if st.button("Train Model"):
-          al_list = train(df)
-
-     if st.button("Detect Anomalies"):
-          with col_4:
-               print_list()
-with col1:
-     if len(filter_data.columns.values) == 2:
-          plot_base(filter_data)
-     else:
-          plot_slicer(filter_data)
 with col_1:
      plot_gauge(per_total,"#0068C9", "%", "Current Count Ratio", 100 )
      plot_metric(
@@ -305,12 +297,35 @@ with col_3:
      show_graph=True,
      color_graph="#90EE90"
      )
+with col_4:
+
+     Date = st.selectbox("DATE", dates , index=dates.index(dates[0]) )
+
+     if st.button("Detect Anomalies"):
+          an_list = ad.Anomalies(pro_df, Date)
+          an_list.to_csv("an.csv", index =False)
+
+     filter_data = slicer()
+with col2:
+     an_list = pd.read_csv("an.csv")
+     custom_css = """
+               <style>
+               table {
+                    font-size: 20px; /* Set your desired font size here */
+               }
+                    </style>
+                    """
+     # Display the custom CSS
+     st.write(custom_css, unsafe_allow_html=True)
+     #  Display the table with the custom CSS styling
+     st.table(an_list)
+
+with col1:
+     if len(filter_data.columns.values) == 2:
+          plot_base(filter_data)
+     else:
+          plot_slicer(filter_data)
 with b_l_c:
      plot_simple(suc_data, "SUCCESS", 'SUM_COUNT_DATE')
 with b_r_c:
      plot_simple(fail_data, "FAIL", "SUM_COUNT_DATE")
-
-
-
-
-
