@@ -92,8 +92,6 @@ df_test.drop(["OUTLIER"], axis=1, inplace=True)
 iso_forest = IsolationForest(contamination=0.06)
 iso_forest.fit(df_train, an_train)
 
-y_pred_iso = iso_forest.predict(df_test)  # predicted labels
-y_pred_iso_map = np.where(y_pred_iso == -1, 1, 0)
 
 print(classification_report(an_test, y_pred_iso_map))  # Isolation forest report
 
