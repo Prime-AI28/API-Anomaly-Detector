@@ -17,3 +17,25 @@ def feature_selection(df):
     df.reset_index(drop=True, inplace=True)
     df.sort_values(by=['DATE'], inplace=True)
     return df
+
+def clean_data(df):
+    # Check for missing values
+    df.isnull().sum()
+    # Handle missing values (e.g., drop rows with missing values)
+    df.dropna(inplace=True)
+    # Remove duplicate rows
+    df.drop_duplicates(inplace=True)
+    df['DATE'] = pd.to_datetime(df['DATE'], format='%Y-%m-%d')
+    df.rename(columns={'APPNAME': 'Application', 'API': 'API_Version', 'STATUS': 'Status', 'COUNT': 'Request_Count'}, inplace=True) 
+
+    return df
+
+
+def time_series_data(updf):
+    df = clean_data(updf)
+    total_unpro_df = df[df['Status'] != 'SE']
+    data__total = total_unpro_df.groupby(['DATE']).sum().reset_index()
+    data__total.drop(columns=['API_Version', 'Application', 'Status'], inplace=True)
+    data__total.rename(columns={ 'DATE':'ds','Request_Count': 'y'}, inplace=True) 
+    
+    return data__total

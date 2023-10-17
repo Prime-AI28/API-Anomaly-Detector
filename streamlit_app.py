@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import src.Anomly_detection as ad
 import src.data_preprocessing as dp
+import src.Data_prediction as dpred
 
 st.set_page_config(
      page_title="API MONITORING",
@@ -22,6 +23,8 @@ def slicer():
 
      default_app = "None"
      default_api = "None"
+
+     dates = df_gp['DATE'].unique()
 
      app_options = df['APPNAME'].unique()
      app_options =  ["None"] + [str(option) for option in app_options]
@@ -49,7 +52,7 @@ def slicer():
      else:
           filtered_df = fil_app_df[(fil_app_df['API'] == Slicer_API) & (fil_app_df['APPNAME'] == Slicer_APP)]
      
-     return filtered_df
+     return filtered_df[-7:]
 
 @st.cache_data
 def plot_slicer(g_data):
@@ -193,6 +196,13 @@ def print_list():
      st.write("Anomaly Detected")
      st.dataframe(train(df))
 
+def plot_pred(df):
+     # Create a figure
+     fig = px.line(x=df['ds'], y=df['y'])
+     # Show the figure
+     st.plotly_chart(fig, use_container_width=True)
+
+
 st.title("API MONITORING")
 st.markdown("_Prototype v0.1.1_")
 
@@ -221,6 +231,7 @@ pro_df, dates = dp.preprocessing(file)
 dates.reverse()
 
 
+
 #total data
 t_data = df.copy()
 t_data['SUM_COUNT_DATE'] = t_data.groupby(['DATE'])['COUNT'].transform('sum')
@@ -229,7 +240,6 @@ t_data = t_data.drop(['APPNAME', 'API', 'COUNT', 'STATUS'], axis=1)
 counts = sorted(t_data['SUM_COUNT_DATE'].tolist())
 current_sumcount = t_data[t_data["DATE"] == dates[-1].strftime('%Y-%m-%d')]['SUM_COUNT_DATE'].tolist()[0]
 max_count = counts[-1]
-
 per_total = (current_sumcount/max_count)*100
 
 
@@ -326,6 +336,14 @@ with col1:
      else:
           plot_slicer(filter_data)
 with b_l_c:
-     plot_simple(suc_data, "SUCCESS", 'SUM_COUNT_DATE')
+     plot_simple(suc_data[-7:], "SUCCESS", 'SUM_COUNT_DATE')
 with b_r_c:
-     plot_simple(fail_data, "FAIL", "SUM_COUNT_DATE")
+     plot_simple(fail_data[-7:], "FAIL", "SUM_COUNT_DATE")
+
+unpro_df = df.copy()
+clean_pro_df = dp.time_series_data(unpro_df)
+
+if st.button("Predict"):
+     future_data = dpred.prediction(clean_pro_df)
+     plot_pred(future_data)
+     
