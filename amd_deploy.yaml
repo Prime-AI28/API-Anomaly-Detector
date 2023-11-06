@@ -32,3 +32,5 @@ spec:
     - protocol: TCP
       port: 8501
       targetPort: 8501
+status:
+  loadBalancer: {}
