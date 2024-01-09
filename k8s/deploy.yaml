@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api_monitor-deployment
+  labels:
+    app: api_monitor
+spec:
+  selector:
+    matchLabels:
+      app: api_monitor
+  template:
+    metadata:
+      labels:
+        app: api_monitor
+    spec:
+      containers:
+      - name: api_monitor
+        image: api_monitor:1.14.2
+        ports:
+        - containerPort: 80

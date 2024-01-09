@@ -1,0 +1,20 @@
+"Apple": "I am a red fruit"
+1: "this is Prasan's roll number"
+
+---
+#lists
+- apple
+- mango
+- banana
+- Apple
+---
+Citites:
+  - new delhi
+  - mumbai
+  - gujrat
+---
+cities: [new delhi, mumbai]
+---
+{ mango: "yelow fruit", age: 56 }
+
+...

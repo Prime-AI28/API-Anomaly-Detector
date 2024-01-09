@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+  name: prime
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-monitor
+  namespace: prime
+spec:
+  replicas: 4 # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: api-monitor
+  template:
+    metadata:
+      labels:
+        app: api-monitor
+    spec:
+      containers:
+        - name: api-monitor-con
+          image: docker.io/shadow2811/api-monitor:v1.0
+          ports:
+            - containerPort: 8501
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-services
+  namespace: prime
+spec:
+  type: LoadBalancer
+  selector:
+    app: api-monitor
+  ports:
+    - protocol: TCP
+      port: 8501
+      targetPort: 8501
+  sessionAffinity: None
+status:
+  loadBalancer: {}

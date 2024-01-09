@@ -4,7 +4,7 @@ metadata:
   name: api-monitor
   namespace: prime
 spec:
-  replicas: 1 # Adjust the number of replicas as needed
+  replicas: 3 # Adjust the number of replicas as needed
   selector:
     matchLabels:
       app: api-monitor

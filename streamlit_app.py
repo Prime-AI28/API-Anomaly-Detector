@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import time
 import plotly.express as px
 import plotly.graph_objects as go
 import src.Anomly_detection as ad
@@ -14,10 +15,26 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+session_timeout = 3000  # 5 minutes
+
+
+def reset_session_state():
+    st.session_state.last_activity_time = time.time()
+
+
+if "last_activity_time" not in st.session_state:
+    st.session_state.last_activity_time = time.time()
+
+# Check for inactivity and reset the session state if needed
+if time.time() - st.session_state.last_activity_time > session_timeout:
+    st.write("Session timeout due to inactivity.")
+    st.stop()
+
 
 @st.cache_data
 def load_data(path: str):
     data = pd.read_csv(path)
+    reset_session_state()
     return data
 
 
@@ -54,6 +71,8 @@ def slicer():
         filtered_df = fil_app_df[
             (fil_app_df["API"] == Slicer_API) & (fil_app_df["APPNAME"] == Slicer_APP)
         ]
+
+    reset_session_state()
 
     return filtered_df[-7:]
 
@@ -315,6 +334,7 @@ with col_4:
     if st.button("Detect Anomalies"):
         an_list = ad.Anomalies(pro_df, Date)
         an_list.to_csv("an.csv", index=False)
+        reset_session_state()
 
     filter_data = slicer()
 with col2:
@@ -347,3 +367,4 @@ clean_pro_df = dp.time_series_data(unpro_df)
 if st.button("Predict"):
     future_data = dpred.prediction(clean_pro_df)
     plot_pred(future_data)
+    reset_session_state()

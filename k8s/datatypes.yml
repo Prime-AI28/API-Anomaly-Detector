@@ -1,0 +1,19 @@
+variable, can be of various type 
+#string
+name: Prasan
+
+#to store in multiple line without lossing formatting
+bio: |
+hey nice to see you here.
+i am devops enthusisate.
+
+# wrtie a single line in multiple lines
+message: >
+this will 
+all be in 
+one single line.
+
+number: 5473
+marks: 98.76
+boolean: No
+
